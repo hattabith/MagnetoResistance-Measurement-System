@@ -85,7 +85,11 @@
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <TextBlock Text="Relay status: " FontWeight="SemiBold"/>
-                    <Label Content="{Binding RelayStatusText}" VerticalAlignment="Center" Padding="0"/>
+                    <Label Content="{Binding RelayStatusText}"
+                           Foreground="{Binding RelayStatusBrush}"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"
+                           Padding="0"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -101,12 +105,27 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Sensor log (every STATUS response):" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Sensor log (every STATUS response):" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                <Button Grid.Row="0"
+                        Grid.Column="1"
+                        Height="28"
+                        Padding="14,0"
+                        Margin="8,0,0,8"
+                        Content="Clear Log"
+                        Command="{Binding ClearLogCommand}"/>
 
                 <TextBox Grid.Row="1"
+                         Grid.ColumnSpan="2"
+                         x:Name="SensorLogTextBox"
                          IsReadOnly="True"
                          Text="{Binding SensorLogText, Mode=OneWay}"
+                         TextChanged="SensorLogTextBox_OnTextChanged"
                          VerticalScrollBarVisibility="Auto"
                          HorizontalScrollBarVisibility="Auto"
                          TextWrapping="NoWrap"

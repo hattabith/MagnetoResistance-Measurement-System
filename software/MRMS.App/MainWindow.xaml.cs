@@ -1,5 +1,6 @@
 ﻿using MRMS.App.ViewModels;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace MRMS.App
 {
@@ -19,6 +20,14 @@ namespace MRMS.App
             }
 
             base.OnClosed(e);
+        }
+
+        private void SensorLogTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (sender is TextBox textBox)
+            {
+                textBox.ScrollToEnd();
+            }
         }
     }
 }

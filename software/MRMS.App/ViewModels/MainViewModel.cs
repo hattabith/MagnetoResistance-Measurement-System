@@ -4,6 +4,7 @@ using System.IO.Ports;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
+using System.Windows.Media;
 using MRMS.App.Commands;
 using MRMS.App.Services;
 
@@ -23,6 +24,7 @@ public sealed class MainViewModel : ObservableObject
     private bool _isConnected;
     private bool _isRelayRunInProgress;
     private string _relayStatusText = "Relay: Unknown";
+    private Brush _relayStatusBrush = Brushes.Goldenrod;
     private string _latestHallText = "Hall: no data";
     private string _sensorLogText = string.Empty;
 
@@ -43,6 +45,7 @@ public sealed class MainViewModel : ObservableObject
         RefreshPortsCommand = new RelayCommand(RefreshPorts);
         ConnectCommand = new AsyncRelayCommand(ToggleConnectionAsync, () => !IsRelayRunInProgress);
         StartRelayCommand = new AsyncRelayCommand(StartRelayAsync, () => IsConnected && !IsRelayRunInProgress);
+        ClearLogCommand = new RelayCommand(ClearLog);
 
         RefreshPorts();
     }
@@ -110,6 +113,12 @@ public sealed class MainViewModel : ObservableObject
         private set => SetProperty(ref _relayStatusText, value);
     }
 
+    public Brush RelayStatusBrush
+    {
+        get => _relayStatusBrush;
+        private set => SetProperty(ref _relayStatusBrush, value);
+    }
+
     public string LatestHallText
     {
         get => _latestHallText;
@@ -127,6 +136,8 @@ public sealed class MainViewModel : ObservableObject
     public ICommand ConnectCommand { get; }
 
     public ICommand StartRelayCommand { get; }
+
+    public ICommand ClearLogCommand { get; }
 
     public async Task CleanupAsync()
     {
@@ -206,7 +217,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         IsConnected = false;
-        RelayStatusText = "Relay: Disconnected";
+        SetRelayStatus("DISCONNECTED");
         LatestHallText = "Hall: no data";
         AppendLog("Disconnected");
     }
@@ -285,7 +296,7 @@ public sealed class MainViewModel : ObservableObject
         var hallRaw = match.Groups[2].Value;
         var hallVoltage = match.Groups[3].Value;
 
-        RelayStatusText = relayState == "ON" ? "Relay: ON" : "Relay: OFF";
+        SetRelayStatus(relayState);
         LatestHallText = $"Hall RAW: {hallRaw}, Voltage: {hallVoltage} V";
 
         var logLine = $"{DateTime.Now:HH:mm:ss.fff} | Relay={relayState}, HallRaw={hallRaw}, HallV={hallVoltage} V";
@@ -301,6 +312,34 @@ public sealed class MainViewModel : ObservableObject
         }
 
         SensorLogText += Environment.NewLine + line;
+    }
+
+    private void ClearLog()
+    {
+        SensorLogText = string.Empty;
+    }
+
+    private void SetRelayStatus(string state)
+    {
+        switch (state.ToUpperInvariant())
+        {
+            case "ON":
+                RelayStatusText = "Relay: ON";
+                RelayStatusBrush = Brushes.ForestGreen;
+                break;
+            case "OFF":
+                RelayStatusText = "Relay: OFF";
+                RelayStatusBrush = Brushes.IndianRed;
+                break;
+            case "DISCONNECTED":
+                RelayStatusText = "Relay: Disconnected";
+                RelayStatusBrush = Brushes.Gray;
+                break;
+            default:
+                RelayStatusText = "Relay: Unknown";
+                RelayStatusBrush = Brushes.Goldenrod;
+                break;
+        }
     }
 
     private void UpdateCommandStates()
