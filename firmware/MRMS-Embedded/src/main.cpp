@@ -1,22 +1,15 @@
 #include <Arduino.h>
 #include <Adafruit_ADS1X15.h>
+#include <MrmsController.h>
 
 namespace {
 constexpr uint8_t RELAY_PIN = 5;
 constexpr uint32_t UART_BAUD = 115200;
-constexpr size_t RX_BUFFER_SIZE = 64;
 
 Adafruit_ADS1115 ads;
+mrms::Controller controller;
 
 bool relayState = false;
-char rxBuffer[RX_BUFFER_SIZE];
-size_t rxIndex = 0;
-
-String normalizeCommand(String cmd) {
-  cmd.trim();
-  cmd.toUpperCase();
-  return cmd;
-}
 
 void setRelay(bool enabled) {
   relayState = enabled;
@@ -53,74 +46,41 @@ void printStatus() {
   Serial.println(voltage, 4);
 }
 
-void processCommand(const String &input) {
-  String cmd = normalizeCommand(input);
-
-  if (cmd.length() == 0) {
+void handleEvent(const mrms::Event &event) {
+  switch (event.type) {
+  case mrms::EventType::None:
     return;
-  }
-
-  if (cmd == F("HELP")) {
+  case mrms::EventType::Help:
     printHelp();
     return;
-  }
-
-  if (cmd == F("RELAY ON") || cmd == F("ON")) {
-    setRelay(true);
+  case mrms::EventType::Status:
+    if (event.relayStateChanged) {
+      setRelay(event.relayState);
+    }
     printStatus();
     return;
-  }
-
-  if (cmd == F("RELAY OFF") || cmd == F("OFF")) {
-    setRelay(false);
-    printStatus();
+  case mrms::EventType::UnknownCommand:
+    Serial.print(F("ERR UNKNOWN_COMMAND="));
+    Serial.println(event.commandText.c_str());
+    Serial.println(F("Type HELP"));
+    return;
+  case mrms::EventType::CommandTooLong:
+    Serial.println(F("ERR COMMAND_TOO_LONG"));
     return;
   }
-
-  if (cmd == F("RELAY TOGGLE") || cmd == F("TOGGLE")) {
-    setRelay(!relayState);
-    printStatus();
-    return;
-  }
-
-  if (cmd == F("STATUS") || cmd == F("READ")) {
-    printStatus();
-    return;
-  }
-
-  Serial.print(F("ERR UNKNOWN_COMMAND="));
-  Serial.println(input);
-  Serial.println(F("Type HELP"));
 }
 
 void readSerialCommands() {
   while (Serial.available() > 0) {
     char c = static_cast<char>(Serial.read());
-
-    if (c == '\r') {
-      continue;
-    }
-
-    if (c == '\n') {
-      rxBuffer[rxIndex] = '\0';
-      processCommand(String(rxBuffer));
-      rxIndex = 0;
-      continue;
-    }
-
-    if (rxIndex < RX_BUFFER_SIZE - 1) {
-      rxBuffer[rxIndex++] = c;
-    } else {
-      rxIndex = 0;
-      Serial.println(F("ERR COMMAND_TOO_LONG"));
-    }
+    handleEvent(controller.feedChar(c));
   }
 }
 } // namespace
 
 void setup() {
   pinMode(RELAY_PIN, OUTPUT);
-  setRelay(false);
+  setRelay(controller.relayState());
 
   Serial.begin(UART_BAUD);
   uint32_t start = millis();

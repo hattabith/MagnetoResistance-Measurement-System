@@ -76,6 +76,21 @@ pio run -t upload
 pio device monitor -b 115200
 ```
 
+## Unit tests (PlatformIO)
+Core command parser logic is covered by unit tests in `test/test_controller/test_main.cpp`.
+
+Run tests on host machine (native):
+
+```bash
+pio test -e native
+```
+
+If you want to run all test environments:
+
+```bash
+pio test
+```
+
 ## Notes
 - ADS1115 gain is configured as `GAIN_ONE` (±4.096 V).
 - Reported voltage is converted by library helper `computeVolts(...)`.
