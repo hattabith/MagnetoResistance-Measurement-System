@@ -3,10 +3,117 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MRMS.App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MRMS Controller" Height="620" Width="900" MinHeight="540" MinWidth="760">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
+        <Border Grid.Row="0" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="COM Port:"/>
+                <ComboBox Grid.Column="1"
+                          Height="30"
+                          ItemsSource="{Binding AvailablePorts}"
+                          SelectedItem="{Binding SelectedPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="12,0,8,0" Text="Baud:"/>
+                <ComboBox Grid.Column="3"
+                          Height="30"
+                          ItemsSource="{Binding AvailableBaudRates}"
+                          SelectedItem="{Binding SelectedBaudRate, Mode=TwoWay}"/>
+
+                <Button Grid.Column="4"
+                        Height="30"
+                        Margin="12,0,8,0"
+                        Padding="14,0"
+                        Content="Refresh"
+                        Command="{Binding RefreshPortsCommand}"/>
+
+                <Button Grid.Column="5"
+                        Height="30"
+                        Padding="18,0"
+                        Content="{Binding ConnectionButtonText}"
+                        Command="{Binding ConnectCommand}"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="140"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Relay ON time (s):"/>
+                <ComboBox Grid.Column="1"
+                          Height="30"
+                          ItemsSource="{Binding AvailableRelayTimes}"
+                          SelectedItem="{Binding RelayOnTimeSeconds, Mode=TwoWay}"/>
+
+                <Button Grid.Column="2"
+                        Height="30"
+                        Margin="12,0,0,0"
+                        Padding="18,0"
+                        Content="Start Relay Cycle"
+                        Command="{Binding StartRelayCommand}"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="2" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <TextBlock Text="Relay status: " FontWeight="SemiBold"/>
+                    <Label Content="{Binding RelayStatusText}" VerticalAlignment="Center" Padding="0"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock Text="Latest Hall value: " FontWeight="SemiBold"/>
+                    <Label Content="{Binding LatestHallText}" VerticalAlignment="Center" Padding="0"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="3" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="Sensor log (every STATUS response):" FontWeight="SemiBold" Margin="0,0,0,8"/>
+
+                <TextBox Grid.Row="1"
+                         IsReadOnly="True"
+                         Text="{Binding SensorLogText, Mode=OneWay}"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         TextWrapping="NoWrap"
+                         AcceptsReturn="True"
+                         FontFamily="Consolas"
+                         FontSize="13"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>
