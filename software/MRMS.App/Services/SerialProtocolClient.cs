@@ -77,7 +77,13 @@ public sealed class SerialProtocolClient : IDisposable
         _readerTask = null;
     }
 
-    public async Task<string> SendCommandAsync(string command, CancellationToken cancellationToken = default, int timeoutMs = 1500)
+    /// <summary>
+    /// Send a SCPI query command and return the first non-empty response line.
+    /// </summary>
+    public async Task<string> SendQueryAsync(
+        string command,
+        CancellationToken cancellationToken = default,
+        int timeoutMs = 2000)
     {
         if (!IsConnected || _serialPort is null)
         {
@@ -85,11 +91,9 @@ public sealed class SerialProtocolClient : IDisposable
         }
 
         await _commandLock.WaitAsync(cancellationToken);
-
         try
         {
             DrainPendingLines();
-
             await Task.Run(() => _serialPort.WriteLine(command), cancellationToken);
 
             using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -98,13 +102,7 @@ public sealed class SerialProtocolClient : IDisposable
             while (true)
             {
                 var line = await _lineChannel.Reader.ReadAsync(timeoutCts.Token);
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
-
-                if (line.StartsWith("OK", StringComparison.OrdinalIgnoreCase) ||
-                    line.StartsWith("ERR", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrWhiteSpace(line))
                 {
                     return line;
                 }
@@ -112,7 +110,92 @@ public sealed class SerialProtocolClient : IDisposable
         }
         catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
         {
-            throw new TimeoutException($"Timeout waiting response for command '{command}'.", ex);
+            throw new TimeoutException($"Timeout waiting for response to '{command}'.", ex);
+        }
+        finally
+        {
+            _commandLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Send a SCPI write command that produces no response (fire-and-forget with
+    /// a brief drain window to absorb any unexpected echo).
+    /// </summary>
+    public async Task SendWriteAsync(
+        string command,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsConnected || _serialPort is null)
+        {
+            throw new InvalidOperationException("Serial port is not connected.");
+        }
+
+        await _commandLock.WaitAsync(cancellationToken);
+        try
+        {
+            DrainPendingLines();
+            await Task.Run(() => _serialPort.WriteLine(command), cancellationToken);
+            // Short settling delay — absorbs any unsolicited startup text.
+            await Task.Delay(50, cancellationToken);
+            DrainPendingLines();
+        }
+        finally
+        {
+            _commandLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Send a SCPI command that returns a single response line (e.g. AUTOP, ABOR).
+    /// </summary>
+    public Task<string> SendCommandAsync(
+        string command,
+        CancellationToken cancellationToken = default,
+        int timeoutMs = 3000)
+        => SendQueryAsync(command, cancellationToken, timeoutMs);
+
+    /// <summary>
+    /// Send SWEE:INIT and stream DATA lines to <paramref name="onLine"/> until
+    /// SWEEP:COMPLETED or SWEEP:ABORTED is received.
+    /// </summary>
+    public async Task SendSweepAsync(
+        Action<string> onLine,
+        CancellationToken cancellationToken = default,
+        int overallTimeoutMs = 600_000)
+    {
+        if (!IsConnected || _serialPort is null)
+        {
+            throw new InvalidOperationException("Serial port is not connected.");
+        }
+
+        await _commandLock.WaitAsync(cancellationToken);
+        try
+        {
+            DrainPendingLines();
+            await Task.Run(() => _serialPort.WriteLine("SWEE:INIT"), cancellationToken);
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeoutCts.CancelAfter(overallTimeoutMs);
+
+            while (true)
+            {
+                var line = await _lineChannel.Reader.ReadAsync(timeoutCts.Token);
+                line = line.Trim();
+                if (string.IsNullOrEmpty(line)) continue;
+
+                onLine(line);
+
+                if (line.Equals("SWEEP:COMPLETED", StringComparison.OrdinalIgnoreCase) ||
+                    line.Equals("SWEEP:ABORTED",   StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("Sweep timed out waiting for SWEEP:COMPLETED.", ex);
         }
         finally
         {
