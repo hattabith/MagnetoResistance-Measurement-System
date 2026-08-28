@@ -4,135 +4,275 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="MRMS Controller" Height="620" Width="900" MinHeight="540" MinWidth="760">
-    <Grid Margin="16">
+        Title="MRMS — MagnetoResistance Measurement System" Height="820" Width="1100"
+        MinHeight="680" MinWidth="900">
+
+    <Window.Resources>
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin"         Value="0,0,0,10"/>
+            <Setter Property="Padding"        Value="8"/>
+            <Setter Property="BorderBrush"    Value="#B0B0B0"/>
+        </Style>
+        <Style TargetType="Label" x:Key="ValueLabel">
+            <Setter Property="FontFamily"  Value="Consolas"/>
+            <Setter Property="FontSize"    Value="13"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="12">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="340"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+        <!-- ═══ Left panel ═══════════════════════════════════════════════════ -->
+        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Margin="0,0,8,0">
+            <StackPanel>
 
-                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="COM Port:"/>
-                <ComboBox Grid.Column="1"
-                          Height="30"
-                          ItemsSource="{Binding AvailablePorts}"
-                          SelectedItem="{Binding SelectedPort, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <!-- Connection -->
+                <GroupBox Header="Connection">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="12,0,8,0" Text="Baud:"/>
-                <ComboBox Grid.Column="3"
-                          Height="30"
-                          ItemsSource="{Binding AvailableBaudRates}"
-                          SelectedItem="{Binding SelectedBaudRate, Mode=TwoWay}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="COM Port:"/>
+                        <ComboBox  Grid.Row="0" Grid.Column="1" Height="28" Margin="4,0"
+                                   ItemsSource="{Binding AvailablePorts}"
+                                   SelectedItem="{Binding SelectedPort, Mode=TwoWay}"/>
+                        <Button    Grid.Row="0" Grid.Column="2" Content="↺" Width="28" Height="28"
+                                   ToolTip="Refresh ports"
+                                   Command="{Binding RefreshPortsCommand}"/>
 
-                <Button Grid.Column="4"
-                        Height="30"
-                        Margin="12,0,8,0"
-                        Padding="14,0"
-                        Content="Refresh"
-                        Command="{Binding RefreshPortsCommand}"/>
+                        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,6,0,0" Text="Baud rate:"/>
+                        <ComboBox  Grid.Row="1" Grid.Column="1" Height="28" Margin="4,6,0,0"
+                                   Grid.ColumnSpan="2"
+                                   ItemsSource="{Binding AvailableBaudRates}"
+                                   SelectedItem="{Binding SelectedBaudRate, Mode=TwoWay}"/>
 
-                <Button Grid.Column="5"
-                        Height="30"
-                        Padding="18,0"
-                        Content="{Binding ConnectionButtonText}"
-                        Command="{Binding ConnectCommand}"/>
-            </Grid>
-        </Border>
+                        <Button    Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
+                                   Height="32" Margin="0,8,0,0"
+                                   Content="{Binding ConnectionButtonText}"
+                                   Command="{Binding ConnectCommand}"/>
+                    </Grid>
+                </GroupBox>
 
-        <Border Grid.Row="1" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                <!-- Instrument ID -->
+                <GroupBox Header="Instrument">
+                    <TextBlock Text="{Binding InstrumentId}" TextWrapping="Wrap"
+                               FontFamily="Consolas" FontSize="12"/>
+                </GroupBox>
 
-                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Relay ON time (s):"/>
-                <ComboBox Grid.Column="1"
-                          Height="30"
-                          ItemsSource="{Binding AvailableRelayTimes}"
-                          SelectedItem="{Binding RelayOnTimeSeconds, Mode=TwoWay}"/>
+                <!-- Source configuration -->
+                <GroupBox Header="Source Configuration">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="110"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                <Button Grid.Column="2"
-                        Height="30"
-                        Margin="12,0,0,0"
-                        Padding="18,0"
-                        Content="Start Relay Cycle"
-                        Command="{Binding StartRelayCommand}"/>
-            </Grid>
-        </Border>
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                                   Text="Magnet voltage (V):"/>
+                        <TextBox   Grid.Row="0" Grid.Column="1" Height="26"
+                                   Text="{Binding MagnetVoltage, StringFormat=F1, UpdateSourceTrigger=PropertyChanged}"/>
 
-        <Border Grid.Row="2" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="Sample current (mA):"/>
+                        <TextBox   Grid.Row="1" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   Text="{Binding SampleCurrent, StringFormat=F1, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="Relay status: " FontWeight="SemiBold"/>
-                    <Label Content="{Binding RelayStatusText}"
-                           Foreground="{Binding RelayStatusBrush}"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"
-                           Padding="0"/>
-                </StackPanel>
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="Pulse width (ms):"/>
+                        <TextBox   Grid.Row="2" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   Text="{Binding PulseWidth, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <TextBlock Text="Latest Hall value: " FontWeight="SemiBold"/>
-                    <Label Content="{Binding LatestHallText}" VerticalAlignment="Center" Padding="0"/>
-                </StackPanel>
-            </Grid>
-        </Border>
+                        <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="Battery tap:"/>
+                        <ComboBox  Grid.Row="3" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   ItemsSource="{Binding AvailableTaps}"
+                                   SelectedItem="{Binding SelectedTap, Mode=TwoWay}"/>
 
-        <Border Grid.Row="3" BorderThickness="1" BorderBrush="#B0B0B0" CornerRadius="8" Padding="12">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                        <WrapPanel Grid.Row="4" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                            <Button Content="Apply Config" Height="28" Padding="10,0" Margin="0,0,6,0"
+                                    Command="{Binding ApplyConfigCommand}"/>
+                            <Button Content="AutoPick Tap" Height="28" Padding="10,0"
+                                    Command="{Binding AutoPickTapCommand}"/>
+                        </WrapPanel>
+                    </Grid>
+                </GroupBox>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Sensor log (every STATUS response):" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                <!-- Stabilization settings -->
+                <GroupBox Header="Stabilization Settings">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="90"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                <Button Grid.Row="0"
-                        Grid.Column="1"
-                        Height="28"
-                        Padding="14,0"
-                        Margin="8,0,0,8"
-                        Content="Clear Log"
-                        Command="{Binding ClearLogCommand}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                                   Text="Threshold dB/dt (mT):"/>
+                        <TextBox   Grid.Row="0" Grid.Column="1" Height="26"
+                                   Text="{Binding StabThreshold, StringFormat=F3, UpdateSourceTrigger=PropertyChanged}"/>
 
-                <TextBox Grid.Row="1"
-                         Grid.ColumnSpan="2"
-                         x:Name="SensorLogTextBox"
-                         IsReadOnly="True"
-                         Text="{Binding SensorLogText, Mode=OneWay}"
-                         TextChanged="SensorLogTextBox_OnTextChanged"
-                         VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Auto"
-                         TextWrapping="NoWrap"
-                         AcceptsReturn="True"
-                         FontFamily="Consolas"
-                         FontSize="13"/>
-            </Grid>
-        </Border>
+                        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="Stable readings count:"/>
+                        <TextBox   Grid.Row="1" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   Text="{Binding StabCount, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="Timeout (ms):"/>
+                        <TextBox   Grid.Row="2" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   Text="{Binding StabTimeout, UpdateSourceTrigger=PropertyChanged}"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Manual measurements -->
+                <GroupBox Header="Manual Measurements">
+                    <WrapPanel>
+                        <Button Content="Measure Field" Height="28" Padding="10,0" Margin="0,0,6,4"
+                                Command="{Binding MeasureFieldCommand}"/>
+                        <Button Content="Measure Resistance" Height="28" Padding="10,0" Margin="0,0,6,4"
+                                Command="{Binding MeasureResistCommand}"/>
+                        <Button Content="Reset Device" Height="28" Padding="10,0" Margin="0,0,0,4"
+                                Command="{Binding ResetCommand}"/>
+                    </WrapPanel>
+                </GroupBox>
+
+                <!-- Sweep configuration -->
+                <GroupBox Header="Sweep Configuration">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="90"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="V start (V):"/>
+                        <TextBox   Grid.Row="0" Grid.Column="1" Height="26"
+                                   Text="{Binding SweepVStart, StringFormat=F1, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="V stop (V):"/>
+                        <TextBox   Grid.Row="1" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   Text="{Binding SweepVStop, StringFormat=F1, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                                   Margin="0,4,0,0" Text="V step (V):"/>
+                        <TextBox   Grid.Row="2" Grid.Column="1" Height="26" Margin="0,4,0,0"
+                                   Text="{Binding SweepVStep, StringFormat=F1, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <WrapPanel Grid.Row="3" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                            <Button Content="▶  Start Sweep" Height="30" Padding="12,0" Margin="0,0,6,0"
+                                    Command="{Binding StartSweepCommand}"/>
+                            <Button Content="■  Abort" Height="30" Padding="12,0"
+                                    Command="{Binding AbortSweepCommand}"/>
+                        </WrapPanel>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Status -->
+                <GroupBox Header="Status">
+                    <TextBlock Text="{Binding StatusText}" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                </GroupBox>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ═══ Right panel ══════════════════════════════════════════════════ -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="200"/>
+            </Grid.RowDefinitions>
+
+            <!-- Sweep data grid -->
+            <GroupBox Grid.Row="0" Header="Sweep Results">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0" Content="Clear Data" Height="26" Padding="10,0"
+                            HorizontalAlignment="Right" Margin="0,0,0,6"
+                            Command="{Binding ClearDataCommand}"/>
+
+                    <DataGrid Grid.Row="1"
+                              ItemsSource="{Binding SweepData}"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              CanUserReorderColumns="False"
+                              FontFamily="Consolas" FontSize="12">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Step"  Binding="{Binding Step}"        Width="50"/>
+                            <DataGridTextColumn Header="V (V)" Binding="{Binding VSetVolts, StringFormat=F1}" Width="60"/>
+                            <DataGridTextColumn Header="B (T)" Binding="{Binding BFieldTesla, StringFormat=F4}" Width="80"/>
+                            <DataGridTextColumn Header="R (Ω)" Binding="{Binding RSampleOhm,  StringFormat=F2}" Width="90"/>
+                            <DataGridTextColumn Header="V+ (V)" Binding="{Binding VPlusVolts,  StringFormat=F5}" Width="85"/>
+                            <DataGridTextColumn Header="V− (V)" Binding="{Binding VMinusVolts, StringFormat=F5}" Width="85"/>
+                            <DataGridTextColumn Header="Tap"   Binding="{Binding Tap}"         Width="50"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}"     Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </GroupBox>
+
+            <!-- Log -->
+            <GroupBox Grid.Row="1" Header="Log">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0" Content="Clear Log" Height="26" Padding="10,0"
+                            HorizontalAlignment="Right" Margin="0,0,0,4"
+                            Command="{Binding ClearLogCommand}"/>
+
+                    <TextBox Grid.Row="1"
+                             x:Name="LogTextBox"
+                             IsReadOnly="True"
+                             Text="{Binding LogText, Mode=OneWay}"
+                             TextChanged="LogTextBox_OnTextChanged"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             TextWrapping="NoWrap"
+                             AcceptsReturn="True"
+                             FontFamily="Consolas"
+                             FontSize="12"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>

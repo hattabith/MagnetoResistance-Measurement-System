@@ -22,7 +22,7 @@ namespace MRMS.App
             base.OnClosed(e);
         }
 
-        private void SensorLogTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
+        private void LogTextBox_OnTextChanged(object sender, TextChangedEventArgs e)
         {
             if (sender is TextBox textBox)
             {
